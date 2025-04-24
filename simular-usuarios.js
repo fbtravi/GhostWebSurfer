@@ -1,5 +1,6 @@
 const { chromium } = require('playwright');
 const fs = require('fs');
+const cliProgress = require('cli-progress');
 
 const URL = 'https://link-tracker.globo.com/cimed/';
 const TOTAL_USUARIOS = 500;
@@ -11,16 +12,38 @@ const logFile = 'log-saida.txt';
 
 fs.writeFileSync(logFile, '');
 
+let totalRequisicoes = 0;
+const estatisticas = new Map();
+
+// Barra de progresso
+const progressBar = new cliProgress.SingleBar({
+  format: '🚀 Simulando |{bar}| {value}/{total} usuários',
+  barCompleteChar: '█',
+  barIncompleteChar: '░',
+  hideCursor: true
+}, cliProgress.Presets.shades_classic);
+
 async function acessarPagina(numeroUsuario) {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
 
   let logRequisicoes = [];
 
-  page.on('requestfinished', request => {
-    const url = request.url();
-    const metodo = request.method();
-    logRequisicoes.push(`${metodo} ${url}`);
+  page.on('requestfinished', async (request) => {
+    try {
+      const response = await request.response();
+      const status = response.status();
+      const metodo = request.method();
+      const url = request.url().split('?')[0];
+
+      const chave = `${metodo} ${status} ${url}`;
+      estatisticas.set(chave, (estatisticas.get(chave) || 0) + 1);
+
+      totalRequisicoes++;
+      logRequisicoes.push(`${metodo} ${url} [${status}]`);
+    } catch (err) {
+      logRequisicoes.push(`(Erro ao capturar resposta: ${request.url()})`);
+    }
   });
 
   try {
@@ -33,26 +56,40 @@ async function acessarPagina(numeroUsuario) {
       logRequisicoes.join('\n') + '\n';
 
     fs.appendFileSync(logFile, logFinal);
-    console.log(`✔️ Usuário ${numeroUsuario} concluído`);
   } catch (err) {
     const erro = `\n--- Acesso ${numeroUsuario} (ERRO) ---\n${err.message}\n`;
     fs.appendFileSync(logFile, erro);
-    console.error(`Usuário ${numeroUsuario} erro:`, err.message);
   } finally {
+    progressBar.increment();
     await browser.close();
   }
 }
 
 (async () => {
+  progressBar.start(TOTAL_USUARIOS, 0);
+
   for (let i = 0; i < TOTAL_USUARIOS; i += CONCORRENCIA) {
     const promessas = [];
     for (let j = 0; j < CONCORRENCIA && (i + j) < TOTAL_USUARIOS; j++) {
       contadorGlobal++;
       promessas.push(acessarPagina(contadorGlobal));
     }
-    console.log(`Executando acessos ${i + 1} a ${i + promessas.length}`);
     await Promise.all(promessas);
   }
 
-  console.log(' Simulação finalizada!');
+  progressBar.stop();
+
+  // Relatório final
+  console.log('\n\n📊 RELATÓRIO FINAL');
+  console.log('===================');
+  console.log(`Total de acessos simulados: ${TOTAL_USUARIOS}`);
+  console.log(`Total de requisições feitas: ${totalRequisicoes}`);
+
+  console.log('\nResumo por Método, Status e URL:');
+  console.log('---------------------------------');
+
+  const estatisticasOrdenadas = [...estatisticas.entries()].sort((a, b) => b[1] - a[1]);
+  estatisticasOrdenadas.forEach(([chave, count]) => {
+    console.log(`${chave.padEnd(80)} → ${count}`);
+  });
 })();
