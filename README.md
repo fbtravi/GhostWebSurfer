@@ -40,15 +40,26 @@ npm config set registry https://registry.npmjs.org/
 ```
 
 * Instale o Playwright
+
 ```bash
 npm install playwright
 npx playwright install
 ```
+
+* Instale o cli-progress
+
+```bash
+npm install playwright cli-progress
+npx playwright install
+```
+
+
 
 * Rode o script
 
 ```bash
 node simular-usuarios.js
 ```
+
 * Veja o log
 Após a execução, um arquivo log-saida.txt será gerado com todos os acessos e suas requisições.
