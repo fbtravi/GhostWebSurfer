@@ -34,7 +34,7 @@ async function acessarPagina(numeroUsuario) {
       const response = await request.response();
       const status = response.status();
       const metodo = request.method();
-      const url = request.url().split('?')[0];
+      const url = request.url();
 
       const chave = `${metodo} ${status} ${url}`;
       estatisticas.set(chave, (estatisticas.get(chave) || 0) + 1);
