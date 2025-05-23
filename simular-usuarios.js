@@ -3,7 +3,7 @@ const fs = require('fs');
 const cliProgress = require('cli-progress');
 
 const URL = 'https://link-tracker.globo.com/cimed/';
-const TOTAL_USUARIOS = 500;
+const TOTAL_USUARIOS = 50;
 const CONCORRENCIA = 50;
 const TEMPO_ESPERA_MS = 2000;
 
