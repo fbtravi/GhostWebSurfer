@@ -1,13 +1,18 @@
 // logger.js
 const fs = require('fs');
-const path = require('path');
 
+/**
+ * Handles logging user results to a file and writing a final summary.
+ */
 class Logger {
-    constructor(logFilePath) {
-        // Ensures the log path is absolute
-        this.logStream = fs.createWriteStream(path.resolve(logFilePath), { flags: 'a' });
+    constructor(config, statsCollector) {
+        // 'w' flag overwrites the file on each run. Use 'a' to append.
+        this.logStream = fs.createWriteStream(config.LOG_FILE, { flags: 'w' });
+        this.config = config;
+        this.statsCollector = statsCollector;
     }
 
+    // This method now only focuses on formatting the output for a single user.
     logUserResult({ userId, url, loadTime, requests, error }) {
         let logEntry = `--- User ${userId} ---\n`;
         if (error) {
@@ -26,7 +31,20 @@ class Logger {
         this.logStream.write(logEntry);
     }
 
+    /**
+     * Writes the final summary report to the log file and closes the stream.
+     */
     close() {
+        const topDomains = this.statsCollector.getSlowestDomains(this.config.TOP_SLOWEST_DOMAINS);
+
+        this.logStream.write('\n\n--- Simulation Summary ---\n');
+        this.logStream.write(`\nTop ${topDomains.length} Slowest Domains (by average resource load time):\n`);
+        this.logStream.write('------------------------------------------------------------------\n');
+        topDomains.forEach(item => {
+            const avgTime = `${item.avgTime.toFixed(0)} ms`.padEnd(10);
+            this.logStream.write(`${avgTime} | ${item.domain}\n`);
+        });
+        this.logStream.write('------------------------------------------------------------------\n');
         this.logStream.end();
     }
 }

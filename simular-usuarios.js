@@ -3,6 +3,7 @@ const cliProgress = require('cli-progress');
 
 const config = require('./config');
 const Logger = require('./logger');
+const StatsCollector = require('./analysis');
 const { simulateUser } = require('./simulator');
 
 async function main() {
@@ -20,13 +21,15 @@ async function main() {
 
     let outputHandler;
     let progressBar;
+    // Centralized statistics collector
+    const statsCollector = new StatsCollector();
 
     if (config.OUTPUT_MODE === 'dashboard') {
         // Load the Dashboard only when needed to avoid dependency errors.
         const Dashboard = require('./dashboard');
-        outputHandler = new Dashboard(config);
+        outputHandler = new Dashboard(config, statsCollector);
     } else {
-        outputHandler = new Logger(config.LOG_FILE);
+        outputHandler = new Logger(config, statsCollector);
         // The progress bar is only used in 'file' mode
         progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
     }
@@ -41,6 +44,9 @@ async function main() {
             const userId = i + 1;
             return limit(async () => {
                 const result = await simulateUser(browser, userId, config.URL, config.WAIT_MS);
+
+                // Process stats centrally
+                statsCollector.processResult(result);
 
                 // Send the result to the active handler (logger or dashboard)
                 outputHandler.logUserResult(result);

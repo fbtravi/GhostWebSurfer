@@ -3,7 +3,7 @@ const blessed = require('blessed');
 const contrib = require('blessed-contrib');
 
 class Dashboard {
-    constructor(config) {
+    constructor(config, statsCollector) {
         this.screen = blessed.screen({
             smartCSR: true,
             title: 'GhostWebSurfer - Load Simulation Dashboard',
@@ -19,13 +19,10 @@ class Dashboard {
                 bg: 'blue',
             },
         });
+        this.config = config;
+        this.statsCollector = statsCollector;
         // --- Data for the charts ---
         this.responseTimeData = { title: 'Response Time (s)', x: [], y: [], style: { line: 'cyan' } };
-        this.successCount = 0;
-        this.errorCount = 0;
-        this.totalRequests = 0;
-        this.totalTime = 0;
-        this.domainTimes = new Map(); // Para rastrear os tempos de requisição por domínio
 
         // --- Widgets ---
         this.lineChart = this.grid.set(1, 0, 5, 8, contrib.line, {
@@ -53,7 +50,7 @@ class Dashboard {
         this.slowestDomainsTable = this.grid.set(6, 8, 4, 4, contrib.table, {
             keys: true,
             fg: 'white',
-            label: 'Slowest Domains (Avg ms)',
+            label: `Slowest Domains (Top ${this.config.TOP_SLOWEST_DOMAINS})`,
             columnSpacing: 1,
             columnWidth: [25, 10],
             tags: true,
@@ -107,21 +104,13 @@ class Dashboard {
      * @param {{userId: number, loadTime: number, requests: {url: string, duration: number, resourceType: string}[], error?: Error}} result
      */
     logUserResult({ userId, loadTime, requests, error }) {
+        // The statsCollector has already processed the result.
+        // This method is now only for updating the UI components.
         if (error) {
-            this.errorCount++;
             this.logPanel.log(`{red-fg}ERROR{/red-fg} | User ${userId}: ${error.message.substring(0, 60)}...`);
         } else {
-            this.successCount++;
-            // Apenas adicione ao tempo total para execuções bem-sucedidas para calcular uma média significativa
-            this.totalTime += loadTime;
             const loadTimeInSeconds = (loadTime / 1000).toFixed(2);
             this.logPanel.log(`{green-fg}OK{/green-fg}    | User ${userId} finished in ${loadTimeInSeconds}s.`);
-        }
-
-        // Conta as requisições de simulações de usuário bem-sucedidas e com falha
-        if (requests) {
-            this.totalRequests += requests.length;
-            this.updateDomainTimes(requests);
         }
 
         // Update line chart
@@ -134,17 +123,15 @@ class Dashboard {
         this.lineChart.setData([this.responseTimeData]);
 
         // Update stats table
-        const totalUsersProcessed = this.successCount + this.errorCount;
-        const avgRequests = totalUsersProcessed > 0 ? (this.totalRequests / totalUsersProcessed).toFixed(1) : '0.0';
-        const avgTimeInSeconds = this.successCount > 0 ? (this.totalTime / this.successCount / 1000).toFixed(2) : '0.00';
+        const stats = this.statsCollector.getOverallStats();
         this.statsTable.setData({
             headers: ['Metric', 'Value'],
             data: [
-                ['Successes', String(this.successCount).padEnd(10)],
-                ['Errors', String(this.errorCount).padEnd(10)],
-                ['Total Reqs', String(this.totalRequests)],
-                ['Avg Reqs/User', avgRequests],
-                ['Avg Time/User', `${avgTimeInSeconds} s`],
+                ['Successes', String(stats.successCount).padEnd(10)],
+                ['Errors', String(stats.errorCount).padEnd(10)],
+                ['Total Reqs', String(stats.totalRequests)],
+                ['Avg Reqs/User', stats.avgRequestsPerUser],
+                ['Avg Time/User', `${stats.avgTimeInSeconds} s`],
             ],
         });
 
@@ -159,37 +146,12 @@ class Dashboard {
     }
 
     /**
-     * Processa as requisições para calcular o tempo total e a contagem por domínio.
-     * @param {{url: string, duration: number}[]} requests
-     */
-    updateDomainTimes(requests) {
-        for (const req of requests) {
-            if (req.duration < 0) continue; // Ignora requisições com duração inválida
-            try {
-                const url = new URL(req.url);
-                const domain = url.hostname;
-                const stats = this.domainTimes.get(domain) || { totalTime: 0, count: 0 };
-                stats.totalTime += req.duration;
-                stats.count++;
-                this.domainTimes.set(domain, stats);
-            } catch (e) {
-                // Ignora URLs inválidas (ex: 'about:blank')
-            }
-        }
-    }
-
-    /**
      * Calcula a média, ordena e atualiza a tabela de domínios mais lentos.
      */
     updateSlowestDomainsTable() {
-        const domainAverages = [];
-        for (const [domain, stats] of this.domainTimes.entries()) {
-            domainAverages.push({ domain, avgTime: stats.totalTime / stats.count });
-        }
-
-        domainAverages.sort((a, b) => b.avgTime - a.avgTime); // Ordena do mais lento para o mais rápido
-
-        const topDomains = domainAverages.slice(0, 10); // Pega os 10 piores
+        const topDomains = this.statsCollector.getSlowestDomains(
+            this.config.TOP_SLOWEST_DOMAINS
+        );
         const data = topDomains.map(item => [
             item.domain.substring(0, 23),
             `${item.avgTime.toFixed(0)} ms`,

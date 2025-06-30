@@ -7,6 +7,7 @@ module.exports = {
     CONCURRENCY: parseInt(process.env.CONCURRENCY, 10) || 5,
     WAIT_MS: parseInt(process.env.WAIT_MS, 10) || 2000,
     LOG_FILE: process.env.LOG_FILE || 'log-saida.txt',
+    TOP_SLOWEST_DOMAINS: parseInt(process.env.TOP_SLOWEST_DOMAINS, 10) || 10,
     OUTPUT_MODE: process.env.OUTPUT_MODE || 'file', // Options: 'file' or 'dashboard'
     // Playwright options
     PLAYWRIGHT_OPTIONS: {
