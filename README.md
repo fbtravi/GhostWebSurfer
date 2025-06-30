@@ -14,6 +14,7 @@ This version has been refactored to be more modular, extensible, and maintainabl
 - Saves a detailed log with load times and accessed URLs.
 - Simulates multiple concurrent users with concurrency control.
 - Displays a progress bar or an interactive dashboard in the terminal.
+- Identifies and ranks the slowest domains based on average resource load time.
 
 ---
 

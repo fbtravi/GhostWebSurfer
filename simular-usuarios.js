@@ -58,7 +58,7 @@ async function main() {
         await browser.close();
 
         if (config.OUTPUT_MODE === 'dashboard') {
-            outputHandler.logMessage("Simulation complete. Press 'q' or 'Ctrl+C' to exit.");
+            outputHandler.setCompleteStatus();
         } else {
             outputHandler.close();
             console.log(`\nSimulation complete. Log saved to ${config.LOG_FILE}`);
