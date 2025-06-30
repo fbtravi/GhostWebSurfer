@@ -1,0 +1,26 @@
+{
+  "name": "playwright-load-simulator",
+  "version": "1.0.0",
+  "description": "A script to simulate multiple concurrent users accessing a URL using Playwright.",
+  "main": "simular-usuarios.js",
+  "scripts": {
+    "start": "make run",
+    "dashboard": "make dashboard",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "playwright",
+    "load-testing",
+    "automation",
+    "simulator"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "blessed": "^0.1.81",
+    "blessed-contrib": "^4.11.0",
+    "cli-progress": "^3.12.0",
+    "p-limit": "^6.2.0",
+    "playwright": "^1.53.2"
+  }
+}

@@ -1,42 +1,39 @@
-# Simulador de Usuários com Playwright (Node.js + Docker)
+# User Simulator with Playwright (Node.js)
 
-Este projeto simula o acesso de múltiplos usuários a uma URL via navegador automatizado (Playwright). Ele carrega toda a página como um navegador real: executa JavaScript, redirecionamentos, rastreadores, etc. O objetivo é gerar carga ou monitorar como a página responde a múltiplos acessos simultâneos.
+This project simulates multiple users accessing a URL via an automated browser (Playwright). It loads the entire page like a real browser: executing JavaScript, handling redirects, trackers, etc. The goal is to generate load or monitor how the page responds to multiple concurrent accesses.
 
----
-
-## O que o script faz
-
-- Acessa a URL desejada (com navegador real)
-- Executa o JavaScript da página como o Chrome faria
-- Coleta **todas as requisições** feitas durante o acesso
-- Salva um log detalhado com tempo de carregamento e URLs acessadas
-- Simula múltiplos usuários simultâneos
+This version has been refactored to be more modular, extensible, and maintainable.
 
 ---
 
-## Variáveis configuráveis
+## What it does
 
-No script abaixo (`simular-usuarios.js`), você pode editar:
+- Accesses the target URL with a real browser engine.
+- Executes the page's JavaScript just like Chrome would.
+- Collects **all requests** made during the session.
+- Saves a detailed log with load times and accessed URLs.
+- Simulates multiple concurrent users with concurrency control.
+- Displays a progress bar or an interactive dashboard in the terminal.
 
-```js
-const URL = 'https://link-tracker.globo.com/cimed/';
-const TOTAL_USUARIOS = 500;
-const CONCORRENCIA = 50;
-const TEMPO_ESPERA_MS = 2000;
-```
+---
 
-## Como rodar no macOS
+## Configuration
 
-* Instale o Node.js e NPM (se ainda não tiver)
+Variables are configured in the `config.js` file or through environment variables (e.g., `TARGET_URL=https://... make run`).
+
+## How to Run (macOS)
+
+This project uses a `Makefile` to automate the setup and execution process.
+
+1.  **Prerequisite:** Ensure you have Homebrew installed on your Mac.
+
+2.  **Run the Simulation:**
+    Use one of the commands below. The `make` command will automatically check for and install all necessary dependencies (Node.js, npm packages, Playwright browsers) before running the script.
+
+    - **To run and save to a log file:**
 
 ```bash
-brew install node
-```
-
-* (Importante) Voltar o NPM pro repositório padrão
-
-```bash
-npm config set registry https://registry.npmjs.org/
+make run
 ```
 
 * Instale o Playwright

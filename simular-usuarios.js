@@ -1,95 +1,73 @@
 const { chromium } = require('playwright');
-const fs = require('fs');
 const cliProgress = require('cli-progress');
 
-const URL = 'https://link-tracker.globo.com/cimed/';
-const TOTAL_USUARIOS = 50;
-const CONCORRENCIA = 50;
-const TEMPO_ESPERA_MS = 2000;
+const config = require('./config');
+const Logger = require('./logger');
+const { simulateUser } = require('./simulator');
 
-let contadorGlobal = 0;
-const logFile = 'log-saida.txt';
+async function main() {
+    // We use dynamic import() to load p-limit, which is an ESM module.
+    const { default: pLimit } = await import('p-limit');
 
-fs.writeFileSync(logFile, '');
-
-let totalRequisicoes = 0;
-const estatisticas = new Map();
-
-// Barra de progresso
-const progressBar = new cliProgress.SingleBar({
-  format: '🚀 Simulando |{bar}| {value}/{total} usuários',
-  barCompleteChar: '█',
-  barIncompleteChar: '░',
-  hideCursor: true
-}, cliProgress.Presets.shades_classic);
-
-async function acessarPagina(numeroUsuario) {
-  const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage();
-
-  let logRequisicoes = [];
-
-  page.on('requestfinished', async (request) => {
-    try {
-      const response = await request.response();
-      const status = response.status();
-      const metodo = request.method();
-      const url = request.url();
-
-      const chave = `${metodo} ${status} ${url}`;
-      estatisticas.set(chave, (estatisticas.get(chave) || 0) + 1);
-
-      totalRequisicoes++;
-      logRequisicoes.push(`${metodo} ${url} [${status}]`);
-    } catch (err) {
-      logRequisicoes.push(`(Erro ao capturar resposta: ${request.url()})`);
+    // Don't show initial logs in dashboard mode to avoid cluttering the screen
+    if (config.OUTPUT_MODE !== 'dashboard') {
+        console.log('Starting user simulation...');
+        console.log(`Target URL: ${config.URL}`);
+        console.log(`Total Users: ${config.TOTAL_USERS}`);
+        console.log(`Concurrency: ${config.CONCURRENCY}`);
+        console.log(`Output Mode: ${config.OUTPUT_MODE}`);
     }
-  });
 
-  try {
-    const inicio = Date.now();
-    await page.goto(URL, { timeout: 15000 });
-    await page.waitForTimeout(TEMPO_ESPERA_MS);
-    const fim = Date.now();
+    let outputHandler;
+    let progressBar;
 
-    const logFinal = `\n--- Acesso ${numeroUsuario} ---\nTempo: ${fim - inicio} ms\nRequisições:\n` +
-      logRequisicoes.join('\n') + '\n';
+    if (config.OUTPUT_MODE === 'dashboard') {
+        // Load the Dashboard only when needed to avoid dependency errors.
+        const Dashboard = require('./dashboard');
+        outputHandler = new Dashboard(config);
+    } else {
+        outputHandler = new Logger(config.LOG_FILE);
+        // The progress bar is only used in 'file' mode
+        progressBar = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+    }
 
-    fs.appendFileSync(logFile, logFinal);
-  } catch (err) {
-    const erro = `\n--- Acesso ${numeroUsuario} (ERRO) ---\n${err.message}\n`;
-    fs.appendFileSync(logFile, erro);
-  } finally {
-    progressBar.increment();
-    await browser.close();
-  }
+    const limit = pLimit(config.CONCURRENCY);
+    const browser = await chromium.launch(config.PLAYWRIGHT_OPTIONS);
+
+    try {
+        if (progressBar) progressBar.start(config.TOTAL_USERS, 0);
+
+        const simulationPromises = Array.from({ length: config.TOTAL_USERS }, (_, i) => {
+            const userId = i + 1;
+            return limit(async () => {
+                const result = await simulateUser(browser, userId, config.URL, config.WAIT_MS);
+
+                // Send the result to the active handler (logger or dashboard)
+                outputHandler.logUserResult(result);
+
+                if (progressBar) progressBar.increment();
+            });
+        });
+
+        await Promise.all(simulationPromises);
+
+    } catch (error) {
+        console.error('\nAn unexpected error occurred during the simulation:', error);
+    } finally {
+        if (progressBar) progressBar.stop();
+        await browser.close();
+
+        if (config.OUTPUT_MODE === 'dashboard') {
+            outputHandler.logMessage("Simulation complete. Press 'q' or 'Ctrl+C' to exit.");
+        } else {
+            outputHandler.close();
+            console.log(`\nSimulation complete. Log saved to ${config.LOG_FILE}`);
+        }
+    }
 }
 
-(async () => {
-  progressBar.start(TOTAL_USUARIOS, 0);
-
-  for (let i = 0; i < TOTAL_USUARIOS; i += CONCORRENCIA) {
-    const promessas = [];
-    for (let j = 0; j < CONCORRENCIA && (i + j) < TOTAL_USUARIOS; j++) {
-      contadorGlobal++;
-      promessas.push(acessarPagina(contadorGlobal));
-    }
-    await Promise.all(promessas);
-  }
-
-  progressBar.stop();
-
-  // Relatório final
-  console.log('\n\n📊 RELATÓRIO FINAL');
-  console.log('===================');
-  console.log(`Total de acessos simulados: ${TOTAL_USUARIOS}`);
-  console.log(`Total de requisições feitas: ${totalRequisicoes}`);
-
-  console.log('\nResumo por Método, Status e URL:');
-  console.log('---------------------------------');
-
-  const estatisticasOrdenadas = [...estatisticas.entries()].sort((a, b) => b[1] - a[1]);
-  estatisticasOrdenadas.forEach(([chave, count]) => {
-    console.log(`${chave.padEnd(80)} → ${count}`);
-  });
-})();
+// Execute the main function and handle unhandled errors.
+main().catch(error => {
+    console.error('Fatal error during script execution:', error);
+    process.exit(1);
+});
