@@ -1,0 +1,104 @@
+--- User 1 ---
+URL: https://cimedremedios.com.br/
+Total Load Time: 5.930s
+Captured Requests (11):
+  - [0.427s] https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+  - [0.407s] https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+  - [0.397s] https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+  - [0.361s] https://www.gstatic.com/recaptcha/releases/h7qt2xUGz2zqKEhSc8DD8baZ/recaptcha__en.js
+  - [0.327s] https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+  - [0.283s] https://www.google-analytics.com/j/collect?v=1&_v=j101&a=290314679&t=pageview&_s=1&dl=https%3A%2F%2F
+  - [0.283s] https://www.google-analytics.com/j/collect?v=1&_v=j101&a=290314679&t=pageview&_s=1&dl=https%3A%2F%2F
+  - [0.283s] https://www.google-analytics.com/j/collect?v=1&_v=j101&a=290314679&t=pageview&_s=1&dl=https%3A%2F%2F
+  - [0.218s] https://use.fontawesome.com/releases/v5.15.3/css/v4-shims.css
+  - [0.210s] https://use.fontawesome.com/releases/v5.15.3/css/all.css
+  - [0.076s] https://tag.goadopt.io/injector.js/v2/0016?website_code=ad011b5a-fd47-43b3-a750-8d2dc0b86a8e
+
+--- User 3 ---
+URL: https://cimedremedios.com.br/
+Total Load Time: 10.913s
+Captured Requests (11):
+  - [0.451s] https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+  - [0.404s] https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+  - [0.390s] https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+  - [0.387s] https://www.gstatic.com/recaptcha/releases/h7qt2xUGz2zqKEhSc8DD8baZ/recaptcha__en.js
+  - [0.329s] https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+  - [0.318s] https://www.google-analytics.com/j/collect?v=1&_v=j101&a=1034873600&t=pageview&_s=1&dl=https%3A%2F%2
+  - [0.318s] https://www.google-analytics.com/j/collect?v=1&_v=j101&a=1034873600&t=pageview&_s=1&dl=https%3A%2F%2
+  - [0.317s] https://www.google-analytics.com/j/collect?v=1&_v=j101&a=1034873600&t=pageview&_s=1&dl=https%3A%2F%2
+  - [0.214s] https://use.fontawesome.com/releases/v5.15.3/css/all.css
+  - [0.213s] https://use.fontawesome.com/releases/v5.15.3/css/v4-shims.css
+  - [0.082s] https://tag.goadopt.io/injector.js/v2/0016?website_code=ad011b5a-fd47-43b3-a750-8d2dc0b86a8e
+
+--- User 2 ---
+URL: https://cimedremedios.com.br/
+Total Load Time: 10.949s
+Captured Requests (11):
+  - [0.509s] https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+  - [0.431s] https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+  - [0.371s] https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+  - [0.366s] https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+  - [0.362s] https://www.gstatic.com/recaptcha/releases/h7qt2xUGz2zqKEhSc8DD8baZ/recaptcha__en.js
+  - [0.309s] https://www.google-analytics.com/j/collect?v=1&_v=j101&a=300632019&t=pageview&_s=1&dl=https%3A%2F%2F
+  - [0.309s] https://www.google-analytics.com/j/collect?v=1&_v=j101&a=300632019&t=pageview&_s=1&dl=https%3A%2F%2F
+  - [0.309s] https://www.google-analytics.com/j/collect?v=1&_v=j101&a=300632019&t=pageview&_s=1&dl=https%3A%2F%2F
+  - [0.204s] https://use.fontawesome.com/releases/v5.15.3/css/all.css
+  - [0.203s] https://use.fontawesome.com/releases/v5.15.3/css/v4-shims.css
+  - [0.077s] https://tag.goadopt.io/injector.js/v2/0016?website_code=ad011b5a-fd47-43b3-a750-8d2dc0b86a8e
+
+--- User 4 ---
+URL: https://cimedremedios.com.br/
+Total Load Time: 11.012s
+Captured Requests (11):
+  - [0.465s] https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+  - [0.448s] https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+  - [0.435s] https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+  - [0.370s] https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+  - [0.352s] https://www.gstatic.com/recaptcha/releases/h7qt2xUGz2zqKEhSc8DD8baZ/recaptcha__en.js
+  - [0.292s] https://www.google-analytics.com/j/collect?v=1&_v=j101&a=1554036766&t=pageview&_s=1&dl=https%3A%2F%2
+  - [0.286s] https://www.google-analytics.com/j/collect?v=1&_v=j101&a=1554036766&t=pageview&_s=1&dl=https%3A%2F%2
+  - [0.286s] https://www.google-analytics.com/j/collect?v=1&_v=j101&a=1554036766&t=pageview&_s=1&dl=https%3A%2F%2
+  - [0.203s] https://use.fontawesome.com/releases/v5.15.3/css/all.css
+  - [0.203s] https://use.fontawesome.com/releases/v5.15.3/css/v4-shims.css
+  - [0.070s] https://tag.goadopt.io/injector.js/v2/0016?website_code=ad011b5a-fd47-43b3-a750-8d2dc0b86a8e
+
+--- User 5 ---
+URL: https://cimedremedios.com.br/
+Total Load Time: 15.869s
+Captured Requests (11):
+  - [0.405s] https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+  - [0.375s] https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+  - [0.375s] https://www.gstatic.com/recaptcha/releases/h7qt2xUGz2zqKEhSc8DD8baZ/recaptcha__en.js
+  - [0.349s] https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+  - [0.323s] https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+  - [0.286s] https://www.google-analytics.com/j/collect?v=1&_v=j101&a=977823221&t=pageview&_s=1&dl=https%3A%2F%2F
+  - [0.286s] https://www.google-analytics.com/j/collect?v=1&_v=j101&a=977823221&t=pageview&_s=1&dl=https%3A%2F%2F
+  - [0.286s] https://www.google-analytics.com/j/collect?v=1&_v=j101&a=977823221&t=pageview&_s=1&dl=https%3A%2F%2F
+  - [0.259s] https://use.fontawesome.com/releases/v5.15.3/css/all.css
+  - [0.244s] https://use.fontawesome.com/releases/v5.15.3/css/v4-shims.css
+  - [0.078s] https://tag.goadopt.io/injector.js/v2/0016?website_code=ad011b5a-fd47-43b3-a750-8d2dc0b86a8e
+
+
+
+--- Simulation Summary ---
+Total Duration: 16.27s
+
+Overall Stats:
+  - Successes      : 5
+  - Errors         : 0
+  - Total Requests : 704
+  - Avg Reqs/User  : 140.80
+  - Avg Time/User  : 10.93s
+
+--- Top 10 Slowest Requests ---
+   509ms | https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+   465ms | https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+   451ms | https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+   448ms | https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+   435ms | https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+   431ms | https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+   427ms | https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+   407ms | https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+   405ms | https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+   404ms | https://fonts.gstatic.com/s/montserrat/v30/JTUSjIg1_i6t8kCHKm459Wlhyw.woff2
+--------------------------

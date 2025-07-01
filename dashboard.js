@@ -44,9 +44,19 @@ class Dashboard {
         });
 
         // Middle Row: Event Log (agora um pouco menor para dar espaço)
-        this.logPanel = this.grid.set(5, 0, 4, 12, contrib.log, {
+        this.logPanel = this.grid.set(5, 0, 4, 8, contrib.log, {
             label: 'Event Log',
             fg: 'green',
+            tags: true,
+        });
+
+        // Novo painel ao lado do Event Log para os domínios mais acessados
+        this.domainTable = this.grid.set(5, 8, 4, 4, contrib.table, {
+            keys: true,
+            fg: 'white',
+            label: 'Top Accessed Domains',
+            columnSpacing: 1,
+            columnWidth: [25, 8], // Domain, Count
             tags: true,
         });
 
@@ -54,7 +64,7 @@ class Dashboard {
         this.slowestRequestsTable = this.grid.set(9, 0, 4, 12, contrib.table, {
             keys: true,
             fg: 'white',
-            label: 'Top 10 Slowest Requests',
+            label: 'Top Slowest Requests',
             columnSpacing: 1, // AJUSTADO: Alinhado com a outra tabela para corrigir bug de renderização.
             columnWidth: [12, 120],
             tags: true,
@@ -157,6 +167,14 @@ class Dashboard {
                 ['Avg Reqs/User', stats.avgRequestsPerUser],
                 ['Avg Time/User', `${stats.avgTimeInSeconds} s`],
             ],
+        });
+
+        // Update top domains table
+        const topDomains = this.statsCollector.getTopDomains(10);
+        const domainData = topDomains.map(item => [item.domain, String(item.count)]);
+        this.domainTable.setData({
+            headers: ['Domain', 'Count'],
+            data: domainData,
         });
 
         this.screen.render();

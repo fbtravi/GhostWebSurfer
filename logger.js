@@ -58,6 +58,17 @@ class Logger {
             });
         }
 
+        const topDomains = this.statsCollector.getTopDomains(10);
+        if (topDomains.length > 0) {
+            summary.push(''); // Linha em branco
+            summary.push('--- Top 10 Accessed Domains ---');
+            topDomains.forEach(item => {
+                // Formata a string para alinhar a contagem
+                const countStr = String(item.count).padStart(5);
+                summary.push(`${countStr} reqs | ${item.domain}`);
+            });
+        }
+
         summary.push('--------------------------\n');
 
         this.logStream.write(summary.join('\n'));
