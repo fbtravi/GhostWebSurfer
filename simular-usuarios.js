@@ -10,19 +10,24 @@ async function main() {
     // We use dynamic import() to load p-limit, which is an ESM module.
     const { default: pLimit } = await import('p-limit');
 
+    const startTime = Date.now(); // Registra o tempo de início da simulação
+
     // Don't show initial logs in dashboard mode to avoid cluttering the screen
     if (config.OUTPUT_MODE !== 'dashboard') {
+        console.log('--- Simulation Configuration ---');
+        for (const [key, value] of Object.entries(config)) {
+            // Usa JSON.stringify para objetos/arrays para melhor legibilidade
+            const displayValue = typeof value === 'object' ? JSON.stringify(value) : value;
+            console.log(`${key.padEnd(30)}: ${displayValue}`);
+        }
+        console.log('--------------------------------\n');
         console.log('Starting user simulation...');
-        console.log(`Target URL: ${config.URL}`);
-        console.log(`Total Users: ${config.TOTAL_USERS}`);
-        console.log(`Concurrency: ${config.CONCURRENCY}`);
-        console.log(`Output Mode: ${config.OUTPUT_MODE}`);
     }
 
     let outputHandler;
     let progressBar;
     // Centralized statistics collector
-    const statsCollector = new StatsCollector();
+    const statsCollector = new StatsCollector(config);
 
     if (config.OUTPUT_MODE === 'dashboard') {
         // Load the Dashboard only when needed to avoid dependency errors.
@@ -35,7 +40,14 @@ async function main() {
     }
 
     const limit = pLimit(config.CONCURRENCY);
-    const browser = await chromium.launch(config.PLAYWRIGHT_OPTIONS);
+    // Adicionamos argumentos ao lançar o navegador para dificultar a detecção de automação.
+    // O argumento '--disable-blink-features=AutomationControlled' remove a flag `navigator.webdriver`,
+    // que é um dos principais indicadores que os sites usam para identificar bots.
+    const launchOptions = {
+        ...config.PLAYWRIGHT_OPTIONS,
+        args: ['--disable-blink-features=AutomationControlled'],
+    };
+    const browser = await chromium.launch(launchOptions);
 
     try {
         if (progressBar) progressBar.start(config.TOTAL_USERS, 0);
@@ -43,7 +55,7 @@ async function main() {
         const simulationPromises = Array.from({ length: config.TOTAL_USERS }, (_, i) => {
             const userId = i + 1;
             return limit(async () => {
-                const result = await simulateUser(browser, userId, config.URL, config.WAIT_MS);
+                const result = await simulateUser(browser, userId, config);
 
                 // Process stats centrally
                 statsCollector.processResult(result);
@@ -63,11 +75,14 @@ async function main() {
         if (progressBar) progressBar.stop();
         await browser.close();
 
+        const totalDurationSeconds = ((Date.now() - startTime) / 1000).toFixed(2);
+
         if (config.OUTPUT_MODE === 'dashboard') {
-            outputHandler.setCompleteStatus();
+            outputHandler.setCompleteStatus(totalDurationSeconds);
         } else {
-            outputHandler.close();
-            console.log(`\nSimulation complete. Log saved to ${config.LOG_FILE}`);
+            // Passa a duração total para o logger para incluir no sumário
+            outputHandler.close(totalDurationSeconds);
+            console.log(`\nSimulation complete in ${totalDurationSeconds}s. Log saved to ${config.LOG_FILE}`);
         }
     }
 }

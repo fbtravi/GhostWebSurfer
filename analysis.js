@@ -1,19 +1,20 @@
 // analysis.js
 
 /**
- * Collects, processes, and provides statistics from simulation runs.
+ * Collects and processes statistics from all user simulations.
  */
 class StatsCollector {
-    constructor() {
+    constructor(config) {
+        this.config = config;
         this.successCount = 0;
         this.errorCount = 0;
+        this.totalLoadTime = 0;
         this.totalRequests = 0;
-        this.totalLoadTime = 0; // Only for successful runs
-        this.domainTimes = new Map(); // { totalTime: number, count: number }
+        this.allRequests = []; // Armazena todas as requisições de todas as simulações
     }
 
     /**
-     * Processes a single user simulation result to update statistics.
+     * Processes the result of a single user simulation.
      * @param {{loadTime: number, requests: {url: string, duration: number}[], error?: Error}} result
      */
     processResult({ loadTime, requests, error }) {
@@ -24,53 +25,42 @@ class StatsCollector {
             this.totalLoadTime += loadTime;
         }
 
-        if (requests) {
-            this.totalRequests += requests.length;
-            this._updateDomainTimes(requests);
-        }
-    }
+        // Conta TODAS as requisições (incluindo de background) para o total geral.
+        this.totalRequests += requests.length;
 
-    /**
-     * Internal method to process requests and aggregate domain timings.
-     * @param {{url: string, duration: number}[]} requests
-     */
-    _updateDomainTimes(requests) {
+        // Adiciona à lista de análise (para "requisições mais lentas") apenas
+        // as que têm duração válida e NÃO são de tipos excluídos.
+        const excludeResourceTypes = this.config.EXCLUDE_RESOURCE_TYPES || [];
         for (const req of requests) {
-            if (req.duration < 0) continue; // Ignore requests with invalid duration
-            try {
-                const url = new URL(req.url);
-                const domain = url.hostname;
-                const stats = this.domainTimes.get(domain) || { totalTime: 0, count: 0 };
-                stats.totalTime += req.duration;
-                stats.count++;
-                this.domainTimes.set(domain, stats);
-            } catch (e) {
-                // Ignore invalid URLs (e.g., 'about:blank')
+            if (req.duration > -1 && !excludeResourceTypes.includes(req.resourceType)) {
+                this.allRequests.push(req);
             }
         }
     }
 
-    /**
-     * Calculates and returns overall simulation statistics.
-     * @returns {{successCount: number, errorCount: number, totalRequests: number, avgRequestsPerUser: string, avgTimeInSeconds: string}}
-     */
     getOverallStats() {
-        const totalUsersProcessed = this.successCount + this.errorCount;
-        const avgRequestsPerUser = totalUsersProcessed > 0 ? (this.totalRequests / totalUsersProcessed).toFixed(1) : '0.0';
+        const totalSimulations = this.successCount + this.errorCount;
         const avgTimeInSeconds = this.successCount > 0 ? (this.totalLoadTime / this.successCount / 1000).toFixed(2) : '0.00';
+        const avgRequestsPerUser = totalSimulations > 0 ? (this.totalRequests / totalSimulations).toFixed(2) : '0.00';
 
-        return { successCount: this.successCount, errorCount: this.errorCount, totalRequests: this.totalRequests, avgRequestsPerUser, avgTimeInSeconds };
+        return {
+            successCount: this.successCount,
+            errorCount: this.errorCount,
+            totalRequests: this.totalRequests,
+            avgRequestsPerUser,
+            avgTimeInSeconds,
+        };
     }
 
     /**
-     * Calculates, sorts, and returns the slowest domains.
-     * @param {number} count - The number of slowest domains to return.
-     * @returns {{domain: string, avgTime: number}[]}
+     * Gets the N slowest requests from all simulations.
+     * @param {number} count - The number of slowest requests to return.
+     * @returns {{url: string, duration: number}[]}
      */
-    getSlowestDomains(count) {
-        const domainAverages = Array.from(this.domainTimes.entries()).map(([domain, stats]) => ({ domain, avgTime: stats.totalTime / stats.count }));
-        domainAverages.sort((a, b) => b.avgTime - a.avgTime);
-        return domainAverages.slice(0, count);
+    getSlowestRequests(count = 10) {
+        return this.allRequests
+            .sort((a, b) => b.duration - a.duration)
+            .slice(0, count);
     }
 }
 

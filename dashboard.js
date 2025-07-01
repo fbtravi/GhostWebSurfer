@@ -9,7 +9,8 @@ class Dashboard {
             title: 'GhostWebSurfer - Load Simulation Dashboard',
         });
 
-        this.grid = new contrib.grid({ rows: 13, cols: 12, screen: this.screen });
+        // Aumentamos o número de linhas para acomodar o novo painel de requisições lentas
+        this.grid = new contrib.grid({ rows: 15, cols: 12, screen: this.screen });
 
         this.grid.set(0, 0, 1, 12, blessed.box, {
             content: '{center}{bold}GhostWebSurfer{/bold}{/center}',
@@ -25,14 +26,15 @@ class Dashboard {
         this.responseTimeData = { title: 'Response Time (s)', x: [], y: [], style: { line: 'cyan' } };
 
         // --- Widgets ---
-        this.lineChart = this.grid.set(1, 0, 5, 8, contrib.line, {
+        // Top Row: Chart and Stats (shorter)
+        this.lineChart = this.grid.set(1, 0, 4, 8, contrib.line, {
             label: 'Response Times (s) (last 50)',
             showLegend: true,
             legend: { width: 25 },
             style: { text: 'green', baseline: 'black' },
         });
 
-        this.statsTable = this.grid.set(1, 8, 5, 4, contrib.table, {
+        this.statsTable = this.grid.set(1, 8, 4, 4, contrib.table, {
             keys: true,
             fg: 'white',
             label: 'Request Stats',
@@ -41,60 +43,82 @@ class Dashboard {
             tags: true,
         });
 
-        this.logPanel = this.grid.set(6, 0, 4, 8, contrib.log, {
+        // Middle Row: Event Log (agora um pouco menor para dar espaço)
+        this.logPanel = this.grid.set(5, 0, 4, 12, contrib.log, {
             label: 'Event Log',
             fg: 'green',
             tags: true,
         });
 
-        this.slowestDomainsTable = this.grid.set(6, 8, 4, 4, contrib.table, {
+        // Novo Painel: Requisições mais lentas
+        this.slowestRequestsTable = this.grid.set(9, 0, 4, 12, contrib.table, {
             keys: true,
             fg: 'white',
-            label: `Slowest Domains (Top ${this.config.TOP_SLOWEST_DOMAINS})`,
-            columnSpacing: 1,
-            columnWidth: [25, 10],
+            label: 'Top 10 Slowest Requests',
+            columnSpacing: 1, // AJUSTADO: Alinhado com a outra tabela para corrigir bug de renderização.
+            columnWidth: [12, 120],
             tags: true,
         });
 
-        this.configTable = this.grid.set(10, 0, 3, 8, contrib.table, {
-            keys: true,
-            fg: 'white',
+        // Bottom Row: Configuration and Status
+        this.configPanel = this.grid.set(13, 0, 2, 8, blessed.box, {
             label: 'Configuration',
-            columnSpacing: 1,
-            columnWidth: [15, 50],
-        });
-
-        this.statusPanel = this.grid.set(10, 8, 3, 4, blessed.box, {
-            label: 'Status',
             tags: true,
-            content: '{center}{yellow-fg}Executing...{/yellow-fg}{/center}',
             style: {
                 fg: 'white',
                 border: { fg: 'cyan' },
             },
         });
 
+        this.statusPanel = this.grid.set(13, 8, 2, 4, blessed.box, {
+            label: 'Status',
+            tags: true,
+            // O conteúdo é definido dinamicamente pelo relógio
+            style: {
+                fg: 'white',
+                border: { fg: 'cyan' },
+            },
+        });
+
+        this.currentStatus = 'Executing...';
+        this.updateStatusPanel(); // Chamada inicial para exibir o status
+
+        // Inicia um relógio para atualizar a data e hora a cada segundo
+        this.clockInterval = setInterval(() => this.updateStatusPanel(), 1000);
+
         // Render the screen for the first time
         this.screen.render();
 
         // Allow exiting with 'q', 'escape', or 'Ctrl+C'
-        this.screen.key(['escape', 'q', 'C-c'], () => process.exit(0));
+        this.screen.key(['escape', 'q', 'C-c'], () => {
+            clearInterval(this.clockInterval); // Garante que o processo termine limpo
+            process.exit(0);
+        });
 
         if (config) {
-            // Dynamically truncate the URL based on the column width
-            const valueColWidth = this.configTable.options.columnWidth[1];
-            const url = config.URL.length > valueColWidth
-                ? `${config.URL.substring(0, valueColWidth - 3)}...`
-                : config.URL;
-            this.configTable.setData({
-                headers: ['Setting', 'Value'],
-                data: [
-                    ['URL', url],
-                    ['Total Users', config.TOTAL_USERS],
-                    ['Concurrency', config.CONCURRENCY],
-                    ['Wait (ms)', config.WAIT_MS],
-                ],
-            });
+            // Constrói a string de configuração dinamicamente para exibir todas as variáveis.
+            const configItems = [];
+            for (const [key, value] of Object.entries(config)) {
+                // Pula objetos complexos para uma exibição mais limpa no dashboard.
+                if (typeof value === 'object' && !Array.isArray(value)) continue;
+
+                let displayValue = value;
+                if (Array.isArray(value)) {
+                    displayValue = `[${value.length} items]`; // Mostra a contagem de arrays para economizar espaço
+                }
+                configItems.push(`{bold}${key}{/bold}: {white-fg}${displayValue}{/white-fg}`);
+            }
+
+            // Agrupa os itens de configuração em linhas para melhor legibilidade.
+            const lines = [];
+            const itemsPerLine = 4;
+            for (let i = 0; i < configItems.length; i += itemsPerLine) {
+                const chunk = configItems.slice(i, i + itemsPerLine);
+                lines.push(chunk.join(' | '));
+            }
+            const configContent = lines.join('\n');
+
+            this.configPanel.setContent(configContent);
             this.screen.render();
         }
     }
@@ -135,8 +159,6 @@ class Dashboard {
             ],
         });
 
-        this.updateSlowestDomainsTable();
-
         this.screen.render();
     }
 
@@ -146,23 +168,44 @@ class Dashboard {
     }
 
     /**
-     * Calcula a média, ordena e atualiza a tabela de domínios mais lentos.
+     * Atualiza o painel de status com o estado atual e um relógio.
      */
-    updateSlowestDomainsTable() {
-        const topDomains = this.statsCollector.getSlowestDomains(
-            this.config.TOP_SLOWEST_DOMAINS
-        );
-        const data = topDomains.map(item => [
-            item.domain.substring(0, 23),
-            `${item.avgTime.toFixed(0)} ms`,
-        ]);
+    updateStatusPanel() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('pt-BR');
+        const dateString = now.toLocaleDateString('pt-BR');
+        const statusColor = this.currentStatus === 'Complete!' ? 'green-fg' : 'yellow-fg';
 
-        this.slowestDomainsTable.setData({ headers: ['Domain', 'Avg (ms)'], data });
+        const content = `{center}{${statusColor}}${this.currentStatus}{/${statusColor}}\n${dateString} ${timeString}{/center}`;
+        this.statusPanel.setContent(content);
+        this.screen.render();
     }
 
-    setCompleteStatus() {
-        this.statusPanel.setContent('{center}{green-fg}Complete!{/green-fg}\n\nPress q or Ctrl+C to exit.{/center}');
-        this.logPanel.log(`{blue-fg}INFO  | Simulation complete.{/blue-fg}`);
+    setCompleteStatus(totalDurationSeconds) {
+        clearInterval(this.clockInterval); // Para o relógio
+        this.currentStatus = 'Complete!';
+        const finalContent = `{center}{green-fg}Complete!{/green-fg}\nFinished at ${new Date().toLocaleTimeString('pt-BR')}\nTotal Time: ${totalDurationSeconds}s\n\nPress q to exit.{/center}`;
+        this.statusPanel.setContent(finalContent);
+        this.logMessage('Simulation complete. Calculating final stats...');
+
+        // Adicionado: Preenche a tabela com as requisições mais lentas
+        const slowestRequests = this.statsCollector.getSlowestRequests(10);
+        const tableData = slowestRequests.map(req => {
+            // Removido o código de cor ({yellow-fg}) que estava causando um bug de renderização na tabela.
+            const duration = `${req.duration.toFixed(0).padStart(7)} ms`;
+            // Trunca a URL para caber no painel, se necessário
+            let url = req.url;
+            if (url.length > 110) {
+                url = url.substring(0, 107) + '...';
+            }
+            return [duration, url];
+        });
+
+        this.slowestRequestsTable.setData({
+            headers: ['Duration', 'URL'],
+            data: tableData,
+        });
+
         this.screen.render();
     }
 }

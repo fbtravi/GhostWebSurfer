@@ -20,11 +20,11 @@ class Logger {
         } else {
             const loadTimeInSeconds = (loadTime / 1000).toFixed(3);
             logEntry += `URL: ${url}\n`;
-            logEntry += `Load Time: ${loadTimeInSeconds}s\n`;
-            const internalRequests = requests.filter(r => r.resourceType !== 'document' && r.duration >= 0);
-            logEntry += `Internal Requests (${internalRequests.length}):\n`;
-            const sortedRequests = [...internalRequests].sort((a, b) => b.duration - a.duration);
-            logEntry += sortedRequests
+            logEntry += `Total Load Time: ${loadTimeInSeconds}s\n`;
+            // Loga todas as requisições capturadas com duração válida, ordenadas pela mais lenta.
+            const validRequests = requests.filter(r => r.duration >= 0);
+            logEntry += `Captured Requests (${validRequests.length}):\n`;
+            logEntry += [...validRequests].sort((a, b) => b.duration - a.duration)
                 .map(r => `  - [${(r.duration / 1000).toFixed(3)}s] ${r.url.substring(0, 100)}`)
                 .join('\n') + '\n\n';
         }
@@ -34,17 +34,33 @@ class Logger {
     /**
      * Writes the final summary report to the log file and closes the stream.
      */
-    close() {
-        const topDomains = this.statsCollector.getSlowestDomains(this.config.TOP_SLOWEST_DOMAINS);
+    close(totalDurationSeconds) {
+        const summary = [];
+        summary.push('\n\n--- Simulation Summary ---');
+        summary.push(`Total Duration: ${totalDurationSeconds}s`);
 
-        this.logStream.write('\n\n--- Simulation Summary ---\n');
-        this.logStream.write(`\nTop ${topDomains.length} Slowest Domains (by average resource load time):\n`);
-        this.logStream.write('------------------------------------------------------------------\n');
-        topDomains.forEach(item => {
-            const avgTime = `${item.avgTime.toFixed(0)} ms`.padEnd(10);
-            this.logStream.write(`${avgTime} | ${item.domain}\n`);
-        });
-        this.logStream.write('------------------------------------------------------------------\n');
+        const stats = this.statsCollector.getOverallStats();
+        summary.push(''); // Linha em branco
+        summary.push('Overall Stats:');
+        summary.push(`  - Successes      : ${stats.successCount}`);
+        summary.push(`  - Errors         : ${stats.errorCount}`);
+        summary.push(`  - Total Requests : ${stats.totalRequests}`);
+        summary.push(`  - Avg Reqs/User  : ${stats.avgRequestsPerUser}`);
+        summary.push(`  - Avg Time/User  : ${stats.avgTimeInSeconds}s`);
+
+        const slowestRequests = this.statsCollector.getSlowestRequests(10);
+        if (slowestRequests.length > 0) {
+            summary.push(''); // Linha em branco
+            summary.push('--- Top 10 Slowest Requests ---');
+            slowestRequests.forEach(req => {
+                const durationStr = `${req.duration.toFixed(0)}ms`.padStart(8);
+                summary.push(`${durationStr} | ${req.url}`);
+            });
+        }
+
+        summary.push('--------------------------\n');
+
+        this.logStream.write(summary.join('\n'));
         this.logStream.end();
     }
 }
