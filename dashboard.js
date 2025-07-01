@@ -9,7 +9,7 @@ class Dashboard {
             title: 'GhostWebSurfer - Load Simulation Dashboard',
         });
 
-        // Aumentamos o número de linhas para acomodar o novo painel de requisições lentas
+        // Increased number of rows to fit the new slow requests panel
         this.grid = new contrib.grid({ rows: 15, cols: 12, screen: this.screen });
 
         this.grid.set(0, 0, 1, 12, blessed.box, {
@@ -22,10 +22,8 @@ class Dashboard {
         });
         this.config = config;
         this.statsCollector = statsCollector;
-        // --- Data for the charts ---
         this.responseTimeData = { title: 'Response Time (s)', x: [], y: [], style: { line: 'cyan' } };
 
-        // --- Widgets ---
         // Top Row: Chart and Stats (shorter)
         this.lineChart = this.grid.set(1, 0, 4, 8, contrib.line, {
             label: 'Response Times (s) (last 50)',
@@ -43,29 +41,29 @@ class Dashboard {
             tags: true,
         });
 
-        // Middle Row: Event Log (agora um pouco menor para dar espaço)
+        // Middle Row: Event Log (slightly smaller to make room)
         this.logPanel = this.grid.set(5, 0, 4, 8, contrib.log, {
             label: 'Event Log',
             fg: 'green',
             tags: true,
         });
 
-        // Novo painel ao lado do Event Log para os domínios mais acessados
+        // New panel next to Event Log for top accessed domains
         this.domainTable = this.grid.set(5, 8, 4, 4, contrib.table, {
             keys: true,
             fg: 'white',
             label: 'Top Accessed Domains',
             columnSpacing: 1,
-            columnWidth: [25, 8], // Domain, Count
+            columnWidth: [25, 8],
             tags: true,
         });
 
-        // Novo Painel: Requisições mais lentas
+        // New Panel: Slowest Requests
         this.slowestRequestsTable = this.grid.set(9, 0, 4, 12, contrib.table, {
             keys: true,
             fg: 'white',
             label: 'Top Slowest Requests',
-            columnSpacing: 1, // AJUSTADO: Alinhado com a outra tabela para corrigir bug de renderização.
+            columnSpacing: 1,
             columnWidth: [12, 120],
             tags: true,
         });
@@ -83,7 +81,6 @@ class Dashboard {
         this.statusPanel = this.grid.set(13, 8, 2, 4, blessed.box, {
             label: 'Status',
             tags: true,
-            // O conteúdo é definido dinamicamente pelo relógio
             style: {
                 fg: 'white',
                 border: { fg: 'cyan' },
@@ -91,35 +88,31 @@ class Dashboard {
         });
 
         this.currentStatus = 'Executing...';
-        this.updateStatusPanel(); // Chamada inicial para exibir o status
+        this.updateStatusPanel();
 
-        // Inicia um relógio para atualizar a data e hora a cada segundo
         this.clockInterval = setInterval(() => this.updateStatusPanel(), 1000);
 
-        // Render the screen for the first time
         this.screen.render();
 
-        // Allow exiting with 'q', 'escape', or 'Ctrl+C'
         this.screen.key(['escape', 'q', 'C-c'], () => {
-            clearInterval(this.clockInterval); // Garante que o processo termine limpo
+            clearInterval(this.clockInterval);
             process.exit(0);
         });
 
         if (config) {
-            // Constrói a string de configuração dinamicamente para exibir todas as variáveis.
+            // Build config string dynamically to display all variables
             const configItems = [];
             for (const [key, value] of Object.entries(config)) {
-                // Pula objetos complexos para uma exibição mais limpa no dashboard.
                 if (typeof value === 'object' && !Array.isArray(value)) continue;
 
                 let displayValue = value;
                 if (Array.isArray(value)) {
-                    displayValue = `[${value.length} items]`; // Mostra a contagem de arrays para economizar espaço
+                    displayValue = `[${value.length} items]`;
                 }
                 configItems.push(`{bold}${key}{/bold}: {white-fg}${displayValue}{/white-fg}`);
             }
 
-            // Agrupa os itens de configuração em linhas para melhor legibilidade.
+            // Group config items into lines for better readability
             const lines = [];
             const itemsPerLine = 4;
             for (let i = 0; i < configItems.length; i += itemsPerLine) {
@@ -138,8 +131,6 @@ class Dashboard {
      * @param {{userId: number, loadTime: number, requests: {url: string, duration: number, resourceType: string}[], error?: Error}} result
      */
     logUserResult({ userId, loadTime, requests, error }) {
-        // The statsCollector has already processed the result.
-        // This method is now only for updating the UI components.
         if (error) {
             this.logPanel.log(`{red-fg}ERROR{/red-fg} | User ${userId}: ${error.message.substring(0, 60)}...`);
         } else {
@@ -147,16 +138,14 @@ class Dashboard {
             this.logPanel.log(`{green-fg}OK{/green-fg}    | User ${userId} finished in ${loadTimeInSeconds}s.`);
         }
 
-        // Update line chart
         this.responseTimeData.x.push(userId.toString());
         this.responseTimeData.y.push(error ? 0 : loadTime / 1000);
-        if (this.responseTimeData.x.length > 50) { // Keep only the last 50 data points
+        if (this.responseTimeData.x.length > 50) {
             this.responseTimeData.x.shift();
             this.responseTimeData.y.shift();
         }
         this.lineChart.setData([this.responseTimeData]);
 
-        // Update stats table
         const stats = this.statsCollector.getOverallStats();
         this.statsTable.setData({
             headers: ['Metric', 'Value'],
@@ -169,7 +158,6 @@ class Dashboard {
             ],
         });
 
-        // Update top domains table
         const topDomains = this.statsCollector.getTopDomains(10);
         const domainData = topDomains.map(item => [item.domain, String(item.count)]);
         this.domainTable.setData({
@@ -186,12 +174,12 @@ class Dashboard {
     }
 
     /**
-     * Atualiza o painel de status com o estado atual e um relógio.
+     * Updates the status panel with the current state and a clock.
      */
     updateStatusPanel() {
         const now = new Date();
-        const timeString = now.toLocaleTimeString('pt-BR');
-        const dateString = now.toLocaleDateString('pt-BR');
+        const timeString = now.toLocaleTimeString('en-US');
+        const dateString = now.toLocaleDateString('en-US');
         const statusColor = this.currentStatus === 'Complete!' ? 'green-fg' : 'yellow-fg';
 
         const content = `{center}{${statusColor}}${this.currentStatus}{/${statusColor}}\n${dateString} ${timeString}{/center}`;
@@ -200,18 +188,16 @@ class Dashboard {
     }
 
     setCompleteStatus(totalDurationSeconds) {
-        clearInterval(this.clockInterval); // Para o relógio
+        clearInterval(this.clockInterval);
         this.currentStatus = 'Complete!';
-        const finalContent = `{center}{green-fg}Complete!{/green-fg}\nFinished at ${new Date().toLocaleTimeString('pt-BR')}\nTotal Time: ${totalDurationSeconds}s\n\nPress q to exit.{/center}`;
+        const finalContent = `{center}{green-fg}Complete!{/green-fg}\nFinished at ${new Date().toLocaleTimeString('en-US')}\nTotal Time: ${totalDurationSeconds}s\n\nPress q to exit.{/center}`;
         this.statusPanel.setContent(finalContent);
         this.logMessage('Simulation complete. Calculating final stats...');
 
-        // Adicionado: Preenche a tabela com as requisições mais lentas
+        // Fill the table with the slowest requests
         const slowestRequests = this.statsCollector.getSlowestRequests(10);
         const tableData = slowestRequests.map(req => {
-            // Removido o código de cor ({yellow-fg}) que estava causando um bug de renderização na tabela.
             const duration = `${req.duration.toFixed(0).padStart(7)} ms`;
-            // Trunca a URL para caber no painel, se necessário
             let url = req.url;
             if (url.length > 110) {
                 url = url.substring(0, 107) + '...';

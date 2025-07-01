@@ -6,7 +6,6 @@ const fs = require('fs');
  */
 class Logger {
     constructor(config, statsCollector) {
-        // 'w' flag overwrites the file on each run. Use 'a' to append.
         this.logStream = fs.createWriteStream(config.LOG_FILE, { flags: 'w' });
         this.config = config;
         this.statsCollector = statsCollector;
@@ -21,7 +20,7 @@ class Logger {
             const loadTimeInSeconds = (loadTime / 1000).toFixed(3);
             logEntry += `URL: ${url}\n`;
             logEntry += `Total Load Time: ${loadTimeInSeconds}s\n`;
-            // Loga todas as requisições capturadas com duração válida, ordenadas pela mais lenta.
+            // Logs all captured requests with valid duration, sorted by slowest.
             const validRequests = requests.filter(r => r.duration >= 0);
             logEntry += `Captured Requests (${validRequests.length}):\n`;
             logEntry += [...validRequests].sort((a, b) => b.duration - a.duration)
@@ -40,7 +39,7 @@ class Logger {
         summary.push(`Total Duration: ${totalDurationSeconds}s`);
 
         const stats = this.statsCollector.getOverallStats();
-        summary.push(''); // Linha em branco
+        summary.push('');
         summary.push('Overall Stats:');
         summary.push(`  - Successes      : ${stats.successCount}`);
         summary.push(`  - Errors         : ${stats.errorCount}`);
@@ -50,7 +49,7 @@ class Logger {
 
         const slowestRequests = this.statsCollector.getSlowestRequests(10);
         if (slowestRequests.length > 0) {
-            summary.push(''); // Linha em branco
+            summary.push('');
             summary.push('--- Top 10 Slowest Requests ---');
             slowestRequests.forEach(req => {
                 const durationStr = `${req.duration.toFixed(0)}ms`.padStart(8);
@@ -60,10 +59,9 @@ class Logger {
 
         const topDomains = this.statsCollector.getTopDomains(10);
         if (topDomains.length > 0) {
-            summary.push(''); // Linha em branco
+            summary.push('');
             summary.push('--- Top 10 Accessed Domains ---');
             topDomains.forEach(item => {
-                // Formata a string para alinhar a contagem
                 const countStr = String(item.count).padStart(5);
                 summary.push(`${countStr} reqs | ${item.domain}`);
             });

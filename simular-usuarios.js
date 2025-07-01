@@ -40,9 +40,9 @@ async function main() {
     }
 
     const limit = pLimit(config.CONCURRENCY);
-    // Adicionamos argumentos ao lançar o navegador para dificultar a detecção de automação.
-    // O argumento '--disable-blink-features=AutomationControlled' remove a flag `navigator.webdriver`,
-    // que é um dos principais indicadores que os sites usam para identificar bots.
+    // Add arguments when launching the browser to make automation detection harder.
+    // The '--disable-blink-features=AutomationControlled' argument removes the `navigator.webdriver` flag,
+    // which is one of the main indicators sites use to detect bots.
     const launchOptions = {
         ...config.PLAYWRIGHT_OPTIONS,
         args: ['--disable-blink-features=AutomationControlled'],
@@ -80,7 +80,6 @@ async function main() {
         if (config.OUTPUT_MODE === 'dashboard') {
             outputHandler.setCompleteStatus(totalDurationSeconds);
         } else {
-            // Passa a duração total para o logger para incluir no sumário
             outputHandler.close(totalDurationSeconds);
             console.log(`\nSimulation complete in ${totalDurationSeconds}s. Log saved to ${config.LOG_FILE}`);
         }

@@ -10,8 +10,8 @@ class StatsCollector {
         this.errorCount = 0;
         this.totalLoadTime = 0;
         this.totalRequests = 0;
-        this.allRequests = []; // Armazena todas as requisições de todas as simulações
-        this.domainCounts = {}; // Armazena a contagem de requisições por domínio
+        this.allRequests = []; // Stores all requests from all simulations
+        this.domainCounts = {}; // Stores the request count per domain
     }
 
     /**
@@ -26,11 +26,11 @@ class StatsCollector {
             this.totalLoadTime += loadTime;
         }
 
-        // Conta TODAS as requisições (incluindo de background) para o total geral.
+        // Counts ALL requests (including background) for the overall total.
         this.totalRequests += requests.length;
 
-        // Adiciona à lista de análise (para "requisições mais lentas") apenas
-        // as que têm duração válida e NÃO são de tipos excluídos.
+        // Adds to analysis list (for "slowest requests") only those
+        // with valid duration and NOT excluded types.
         const excludeResourceTypes = this.config.EXCLUDE_RESOURCE_TYPES || [];
         for (const req of requests) {
             try {
@@ -38,7 +38,7 @@ class StatsCollector {
                 const domain = url.hostname;
                 this.domainCounts[domain] = (this.domainCounts[domain] || 0) + 1;
             } catch (e) {
-                // Ignora URLs inválidas que não podem ser processadas (ex: data URIs)
+                // Ignores invalid URLs that can't be processed (e.g., data URIs)
             }
 
             if (req.duration > -1 && !excludeResourceTypes.includes(req.resourceType)) {
