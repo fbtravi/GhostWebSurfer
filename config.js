@@ -2,7 +2,7 @@
 
 // Use environment variables for flexibility (great for Docker) or default values.
 module.exports = {
-    URL: process.env.TARGET_URL || 'https://cimedremedios.com.br/',
+    URL: process.env.TARGET_URL || 'https://google.com/',
     TOTAL_USERS: parseInt(process.env.TOTAL_USERS, 10) || 5,
     CONCURRENCY: parseInt(process.env.CONCURRENCY, 10) || 5,
     WAIT_MS: parseInt(process.env.WAIT_MS, 10) || 2000,
