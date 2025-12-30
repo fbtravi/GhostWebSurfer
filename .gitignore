@@ -4,6 +4,7 @@ node_modules/
 # Logs
 logs
 *.log
+output-log.txt
 
 # Environment variables
 .env

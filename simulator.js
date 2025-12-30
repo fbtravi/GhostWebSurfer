@@ -9,23 +9,23 @@
  */
 async function simulateUser(browser, userId, config) {
     const { URL: url, WAIT_MS: waitMs, PAGE_LOAD_TIMEOUT_MS: timeout } = config;
-    // Criamos um contexto de navegador mais realista para evitar detecção de bot.
-    // Alguns sites servem conteúdo diferente (ou nenhum) para scripts automatizados.
-    // Definir um User-Agent e um Viewport comuns ajuda a simular um usuário real.
+    // We create a more realistic browser context to avoid bot detection.
+    // Some sites serve different content (or none) to automated scripts.
+    // Setting a common User-Agent and Viewport helps simulate a real user.
     const context = await browser.newContext({
         userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
         viewport: {
             width: 1920,
             height: 1080,
         },
-        // Adicionado: Bloqueia service workers. Sites que usam service workers para cache
-        // podem impedir a captura correta do tempo das requisições de rede.
+        // Added: Blocks service workers. Sites using service workers for caching
+        // can prevent accurate capture of network request timings.
         serviceWorkers: 'block',
     });
     const page = await context.newPage();
 
-    // Adicionado: Define cabeçalhos para desabilitar o cache em cada requisição.
-    // Isso força o carregamento dos recursos pela rede, garantindo a medição do tempo.
+    // Added: Set headers to disable cache on each request.
+    // This forces resource loading from the network, ensuring timing measurement.
     await page.setExtraHTTPHeaders({
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
@@ -33,7 +33,7 @@ async function simulateUser(browser, userId, config) {
     });
 
     const requests = [];
-    const processedRequests = new Set(); // Avoids counting the same request twice
+    const processedRequests = new Set(); // Prevents counting the same request twice
     const requestStartTimes = new Map(); // Fallback for timing: stores request start time
 
     // Capture the start time for every request as a fallback mechanism.
@@ -74,21 +74,21 @@ async function simulateUser(browser, userId, config) {
 
     const pageLoadStartTime = Date.now();
     try {
-        // Etapa 1: Navega e espera pelo evento 'load'. É rápido e confiável.
-        // O listener 'requestfinished' cuidará de capturar a requisição principal e todas as outras.
+        // Step 1: Navigate and wait for the 'load' event. It's fast and reliable.
+        // The 'requestfinished' listener will handle capturing the main request and all others.
         await page.goto(url, { waitUntil: 'load', timeout });
 
-        // Etapa 2: Após o 'load', espera a rede ficar ociosa.
-        // Isso captura requisições de analytics, trackers e outras chamadas assíncronas.
-        // Envolvemos em um try/catch pois algumas páginas nunca ficam 100% ociosas.
+        // Step 2: After 'load', wait for the network to become idle.
+        // This captures analytics, trackers, and other async calls.
+        // We wrap this in try/catch since some pages never become 100% idle.
         try {
-            await page.waitForLoadState('networkidle', { timeout: 15000 }); // Dá 15s para a rede acalmar
+            await page.waitForLoadState('networkidle', { timeout: 15000 }); // Give 15s for the network to settle
         } catch (e) {
-            // Não há problema se estourar o tempo. Já capturamos a maioria das requisições.
-            // O log pode ser habilitado aqui para depuração, se necessário.
+            // No problem if it times out. We've already captured most requests.
+            // Logging can be enabled here for debugging if needed.
         }
 
-        // Etapa 3: Uma espera explícita adicional, se configurada.
+        // Step 3: An additional explicit wait, if configured.
         if (waitMs > 0) {
             await page.waitForTimeout(waitMs);
         }

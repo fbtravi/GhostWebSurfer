@@ -58,15 +58,15 @@ node_modules: check_node package.json
 # --- Main Targets ---
 
 run: node_modules
-	@node simular-usuarios.js
+	@node simulate-users.js
 
 dashboard: node_modules
-	@OUTPUT_MODE=dashboard node simular-usuarios.js
+	@OUTPUT_MODE=dashboard node simulate-users.js
 
 clean:
 	@echo "🧹 Cleaning the project..."
 	@rm -rf node_modules
-	@rm -f log-saida.txt
+	@rm -f output-log.txt
 
 help:
 	@echo "Available commands:"
