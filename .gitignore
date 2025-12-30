@@ -5,6 +5,11 @@ node_modules/
 logs
 *.log
 output-log.txt
+output/*
+!output/.gitkeep
 
 # Environment variables
 .env
+
+# Docker
+.env.docker.local

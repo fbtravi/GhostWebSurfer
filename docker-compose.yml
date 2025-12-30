@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  ghostwebsurfer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ghostwebsurfer
+    environment:
+      # Override these values as needed
+      - TARGET_URL=${TARGET_URL:-https://google.com/}
+      - TOTAL_USERS=${TOTAL_USERS:-5}
+      - CONCURRENCY=${CONCURRENCY:-5}
+      - WAIT_MS=${WAIT_MS:-2000}
+      - LOG_FILE=/app/output/output-log.txt
+      - PAGE_LOAD_TIMEOUT_MS=${PAGE_LOAD_TIMEOUT_MS:-60000}
+      - OUTPUT_MODE=${OUTPUT_MODE:-file}
+    volumes:
+      # Mount output directory to persist logs
+      - ./output:/app/output
+    # Security options
+    security_opt:
+      - seccomp:unconfined
+    # Increase shared memory for Chrome/Chromium
+    shm_size: '2gb'
+    # Resource limits (adjust as needed)
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+
+  # Dashboard mode service (run separately)
+  ghostwebsurfer-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ghostwebsurfer-dashboard
+    environment:
+      - TARGET_URL=${TARGET_URL:-https://google.com/}
+      - TOTAL_USERS=${TOTAL_USERS:-5}
+      - CONCURRENCY=${CONCURRENCY:-5}
+      - WAIT_MS=${WAIT_MS:-2000}
+      - PAGE_LOAD_TIMEOUT_MS=${PAGE_LOAD_TIMEOUT_MS:-60000}
+      - OUTPUT_MODE=dashboard
+    # TTY and stdin for interactive dashboard
+    tty: true
+    stdin_open: true
+    security_opt:
+      - seccomp:unconfined
+    shm_size: '2gb'
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+    profiles:
+      - dashboard

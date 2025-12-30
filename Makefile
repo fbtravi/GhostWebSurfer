@@ -4,7 +4,7 @@
 SHELL := /bin/bash
 
 # Prevents make from confusing targets with file names.
-.PHONY: all run dashboard clean help check_node install_node_mac install_node_linux
+.PHONY: all run dashboard clean help check_node install_node_mac install_node_linux docker-build docker-run docker-dashboard docker-clean
 
 # Default target, shows help.
 all: run
@@ -68,8 +68,53 @@ clean:
 	@rm -rf node_modules
 	@rm -f output-log.txt
 
+# --- Docker Targets ---
+
+docker-build:
+	@echo "🐳 Building Docker image..."
+	@docker build -t ghostwebsurfer:latest .
+
+docker-run: docker-build
+	@echo "🚀 Running GhostWebSurfer in Docker..."
+	@docker-compose up
+
+docker-dashboard: docker-build
+	@echo "📊 Running GhostWebSurfer Dashboard in Docker..."
+	@docker-compose --profile dashboard up ghostwebsurfer-dashboard
+
+docker-clean:
+	@echo "🧹 Cleaning Docker resources..."
+	@docker-compose down -v
+	@docker rmi ghostwebsurfer:latest 2>/dev/null || true
+
 help:
-	@echo "Available commands:"
-	@echo "  make run        - Runs the simulation and saves the log to a file (default)."
-	@echo "  make dashboard  - Runs the simulation with an interactive terminal dashboard."
-	@echo "  make clean      - Removes generated files and dependencies."
+	@echo ""
+	@echo "👻 GhostWebSurfer - Available Commands"
+	@echo "======================================"
+	@echo ""
+	@echo "📦 LOCAL EXECUTION:"
+	@echo "  make                    - Run simulation in file mode (default)"
+	@echo "  make run                - Run simulation and save log to file"
+	@echo "  make dashboard          - Run with interactive terminal dashboard"
+	@echo "  make clean              - Remove node_modules and generated files"
+	@echo ""
+	@echo "🐳 DOCKER EXECUTION:"
+	@echo "  make docker-build       - Build Docker image from Dockerfile"
+	@echo "  make docker-run         - Build and run simulation in Docker (file mode)"
+	@echo "  make docker-dashboard   - Build and run simulation in Docker (dashboard mode)"
+	@echo "  make docker-clean       - Remove Docker containers, volumes and images"
+	@echo ""
+	@echo "🔧 MAINTENANCE:"
+	@echo "  make check_node         - Check if Node.js is installed"
+	@echo "  make help               - Show this help message"
+	@echo ""
+	@echo "📚 DOCUMENTATION:"
+	@echo "  - README.md             - Main documentation"
+	@echo "  - DOCKER.md             - Docker-specific guide"
+	@echo "  - .env.example          - Environment variables template"
+	@echo ""
+	@echo "💡 EXAMPLES:"
+	@echo "  TARGET_URL=https://example.com make run"
+	@echo "  TOTAL_USERS=10 CONCURRENCY=5 make dashboard"
+	@echo "  TARGET_URL=https://example.com make docker-run"
+	@echo ""

@@ -60,11 +60,115 @@ Generates comprehensive logs with:
 
 ### Prerequisites
 
+**Choose one of the following methods:**
+
+#### Option 1: Docker (Recommended)
+
+- **Docker**: Version 20.10+
+- **Docker Compose**: Version 2.0+
+- No other dependencies needed!
+
+#### Option 2: Local Installation
+
 - **macOS**: Homebrew (will be used to install Node.js if needed)
 - **Linux**: apt-get (for Debian/Ubuntu)
 - **Node.js**: Version 16 or higher (will be installed automatically if missing)
 
-### Installation & Running
+---
+
+### 🐳 Running with Docker (Easiest)
+
+Docker is the **recommended** way to run GhostWebSurfer as it handles all dependencies automatically.
+
+> 📚 **For detailed Docker documentation, see [DOCKER.md](DOCKER.md)**
+
+#### Quick Start with Docker
+
+```bash
+# Clone the repository
+git clone <your-repo-url>
+cd GhostWebSurfer
+
+# Build and run with Docker Compose
+make docker-run
+
+# Or build and run dashboard mode
+make docker-dashboard
+
+# Or use docker-compose directly
+docker-compose up
+```
+
+#### Docker Compose Examples
+
+```bash
+# Run with environment variables
+TARGET_URL=https://example.com TOTAL_USERS=10 docker-compose up
+
+# Run in dashboard mode
+docker-compose --profile dashboard up ghostwebsurfer-dashboard
+
+# Run with custom .env file
+cp .env.docker .env
+# Edit .env with your settings
+docker-compose --env-file .env up
+
+# Run in detached mode (background)
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop and remove containers
+docker-compose down
+```
+
+#### Docker Run Examples
+
+```bash
+# Run directly with docker run
+docker run --rm \
+  --security-opt seccomp=unconfined \
+  --shm-size=2gb \
+  -e TARGET_URL=https://example.com \
+  -e TOTAL_USERS=10 \
+  -e CONCURRENCY=5 \
+  -v $(pwd)/output:/app/output \
+  ghostwebsurfer:latest
+
+# Dashboard mode (interactive)
+docker run --rm -it \
+  --security-opt seccomp=unconfined \
+  --shm-size=2gb \
+  -e TARGET_URL=https://example.com \
+  -e OUTPUT_MODE=dashboard \
+  ghostwebsurfer:latest
+```
+
+#### Docker Helper Script
+
+The `docker-run.sh` script provides a convenient way to run simulations:
+
+```bash
+# Basic usage
+./docker-run.sh -u https://example.com -n 10
+
+# With dashboard mode
+./docker-run.sh -d -u https://example.com
+
+# Custom output directory
+./docker-run.sh -u https://example.com -o ./my-results
+
+# Full options
+./docker-run.sh -u https://example.com -n 20 -c 5 -o ./results
+
+# View help
+./docker-run.sh --help
+```
+
+---
+
+### Installation & Running (Local)
 
 The easiest way to run GhostWebSurfer is using the provided Makefile:
 
@@ -179,6 +283,8 @@ make dashboard
 OUTPUT_MODE=dashboard node simulate-users.js
 ```
 
+![alt text](image.png)
+
 Press `q` or `Esc` to exit the dashboard.
 
 ---
@@ -195,7 +301,12 @@ GhostWebSurfer/
 ├── analysis.js            # Statistics collection
 ├── package.json           # Node.js dependencies
 ├── Makefile              # Build and run automation
+├── Dockerfile            # Docker container definition
+├── docker-compose.yml    # Docker Compose configuration
+├── docker-run.sh         # Docker helper script
+├── .dockerignore         # Docker ignore patterns
 ├── .env.example          # Environment variables template
+├── .env.docker           # Docker environment template
 └── README.md             # This file
 ```
 
@@ -267,6 +378,33 @@ Reduce concurrency if you experience memory issues:
 CONCURRENCY=2 make run
 ```
 
+### Docker Issues
+
+**Chromium crashes in Docker:**
+```bash
+# Increase shared memory
+docker run --shm-size=2gb ...
+
+# Or use host IPC
+docker run --ipc=host ...
+```
+
+**Permission issues with output directory:**
+```bash
+# Ensure output directory exists and is writable
+mkdir -p ./output
+chmod 777 ./output
+```
+
+**Container exits immediately:**
+```bash
+# Check logs
+docker-compose logs
+
+# Run interactively to see errors
+docker run --rm -it ghostwebsurfer:latest
+```
+
 ---
 
 ## ❓ FAQ
@@ -275,7 +413,10 @@ CONCURRENCY=2 make run
 A: GhostWebSurfer uses real browsers (via Playwright) instead of simple HTTP clients. This means it executes JavaScript, loads all resources, and behaves exactly like real users, providing more accurate performance metrics.
 
 **Q: Can I run this in CI/CD pipelines?**  
-A: Yes! GhostWebSurfer works great in CI/CD environments. Use the file output mode and check the logs for performance regressions.
+A: Yes! GhostWebSurfer works great in CI/CD environments. The Docker image is perfect for CI/CD as it includes all dependencies. Use the file output mode and check the logs for performance regressions.
+
+**Q: Why Docker instead of npm install?**  
+A: Docker provides a consistent environment with all Playwright dependencies pre-installed, eliminating "works on my machine" issues. It's especially useful in CI/CD pipelines and when running on different operating systems.
 
 **Q: How do I test authenticated pages?**  
 A: You can modify the `simulator.js` file to add authentication logic before navigating to the target URL. Check the Playwright documentation for authentication examples.
